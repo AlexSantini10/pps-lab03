@@ -4,7 +4,7 @@ import u03.Optionals.Optional
 import u03.Optionals.Optional.*
 
 object Sequences: // Essentially, generic linkedlists
-  
+
   enum Sequence[E]:
     case Cons(head: E, tail: Sequence[E])
     case Nil()
@@ -13,16 +13,16 @@ object Sequences: // Essentially, generic linkedlists
 
     def sum(l: Sequence[Int]): Int = l match
       case Cons(h, t) => h + sum(t)
-      case _          => 0
+      case _ => 0
 
     def map[A, B](l: Sequence[A])(mapper: A => B): Sequence[B] = l match
       case Cons(h, t) => Cons(mapper(h), map(t)(mapper))
-      case Nil()      => Nil()
+      case Nil() => Nil()
 
     def filter[A](l1: Sequence[A])(pred: A => Boolean): Sequence[A] = l1 match
       case Cons(h, t) if pred(h) => Cons(h, filter(t)(pred))
-      case Cons(_, t)            => filter(t)(pred)
-      case Nil()                 => Nil()
+      case Cons(_, t) => filter(t)(pred)
+      case Nil() => Nil()
 
     // Lab 03
 
@@ -34,7 +34,7 @@ object Sequences: // Essentially, generic linkedlists
      * E.g., [], 2 => []
      */
     def skip[A](s: Sequence[A])(n: Int): Sequence[A] = s match
-      case Cons(_, t) if n>0 => skip(t)(n-1)
+      case Cons(_, t) if n > 0 => skip(t)(n - 1)
       case _ => s
 
     /*
@@ -43,9 +43,10 @@ object Sequences: // Essentially, generic linkedlists
      * E.g., [10], [] => []
      * E.g., [], [] => []
      */
-    def zip[A, B](first: Sequence[A], second: Sequence[B]): Sequence[(A, B)] = (first, second) match
-      case (Cons(h1, t1), Cons(h2, t2)) => Cons((h1, h2), zip(t1, t2))
-      case _ => Nil()
+    def zip[A, B](first: Sequence[A], second: Sequence[B]): Sequence[(A, B)] =
+      (first, second) match
+        case (Cons(h1, t1), Cons(h2, t2)) => Cons((h1, h2), zip(t1, t2))
+        case _ => Nil()
 
     /*
      * Concatenate two sequences
@@ -53,7 +54,7 @@ object Sequences: // Essentially, generic linkedlists
      * E.g., [10], [] => [10]
      * E.g., [], [] => []
      */
-    def concat[A](s1: Sequence[A], s2: Sequence[A]): Sequence[A] = (s1) match
+    def concat[A](s1: Sequence[A], s2: Sequence[A]): Sequence[A] = s1 match
       case Cons(h, t) => Cons(h, concat(t, s2))
       case Nil() => s2
 
@@ -63,14 +64,12 @@ object Sequences: // Essentially, generic linkedlists
      * E.g., [10] => [10]
      * E.g., [] => []
      */
-    def reverse[A](s: Sequence[A]): Sequence[A] = {
-      def reverseHelper[A](s: Sequence[A], r: Sequence[A]): Sequence[A] = s match {
+    def reverse[A](s: Sequence[A]): Sequence[A] =
+      def reverseHelper(s: Sequence[A], r: Sequence[A]): Sequence[A] = s match
         case Cons(h, t) => reverseHelper(t, Cons(h, r))
         case Nil() => r
-      }
 
       reverseHelper(s, Nil())
-    }
 
     /*
      * Map the elements of the sequence to a new sequence and flatten the result
@@ -91,8 +90,7 @@ object Sequences: // Essentially, generic linkedlists
       case Nil() => Empty()
       case Cons(h, t) => min(t) match
         case Empty() => Just(h)
-        case Just(m) => if h < m then Just(h) else Just(m)
-
+        case Just(m) => Just(if h < m then h else m)
 
     /*
      * Get the elements at even indices
@@ -110,8 +108,8 @@ object Sequences: // Essentially, generic linkedlists
      * E.g., [10, 20, 30] => false if elem is 40
      */
     def contains[A](s: Sequence[A])(elem: A): Boolean = s match
-      case Cons(h, t) if h == elem => true
-      case Cons(h, t) => contains(t)(elem)
+      case Cons(h, _) if h == elem => true
+      case Cons(_, t) => contains(t)(elem)
       case Nil() => false
 
     /*
@@ -133,19 +131,40 @@ object Sequences: // Essentially, generic linkedlists
      * E.g., [10, 20, 30] => [[10], [20], [30]]
      * E.g., [10, 20, 20, 30] => [[10], [20, 20], [30]]
      */
-    def group[A](s: Sequence[A]): Sequence[Sequence[A]] = ???
+    def group[A](s: Sequence[A]): Sequence[Sequence[A]] =
+      def takeWhile(s: Sequence[A])(pred: A => Boolean): Sequence[A] = s match
+        case Cons(h, t) if pred(h) => Cons(h, takeWhile(t)(pred))
+        case _ => Nil()
+
+      def dropWhile(s: Sequence[A])(pred: A => Boolean): Sequence[A] = s match
+        case Cons(h, t) if pred(h) => dropWhile(t)(pred)
+        case _ => s
+
+      s match
+        case Nil() => Nil()
+        case Cons(h, _) =>
+          val currentGroup = takeWhile(s)(_ == h)
+          val rest = dropWhile(s)(_ == h)
+          Cons(currentGroup, group(rest))
 
     /*
      * Partition the sequence into two sequences based on the predicate
      * E.g., [10, 20, 30] => ([10], [20, 30]) if pred is (_ < 20)
      * E.g., [11, 20, 31] => ([20], [11, 31]) if pred is (_ % 2 == 0)
      */
-    def partition[A](s: Sequence[A])(pred: A => Boolean): (Sequence[A], Sequence[A]) = ???
+    def partition[A](s: Sequence[A])(pred: A => Boolean): (Sequence[A], Sequence[A]) = s match
+      case Nil() => (Nil(), Nil())
+      case Cons(h, t) =>
+        val (matching, nonMatching) = partition(t)(pred)
+        if pred(h) then
+          (Cons(h, matching), nonMatching)
+        else
+          (matching, Cons(h, nonMatching))
 
 @main def trySequences =
-  import Sequences.* 
+  import Sequences.*
   val l = Sequence.Cons(10, Sequence.Cons(20, Sequence.Cons(30, Sequence.Nil())))
-  println(Sequence.sum(l)) // 30
+  println(Sequence.sum(l)) // 60
 
   import Sequence.*
 
