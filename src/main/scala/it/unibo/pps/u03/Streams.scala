@@ -2,7 +2,7 @@ package u03
 
 object Streams extends App:
 
-  import u03.Sequences.*
+  import Sequences.*
   import Sequences.Sequence.*
 
   enum Stream[A]:
@@ -38,51 +38,37 @@ object Streams extends App:
     def iterate[A](init: => A)(next: A => A): Stream[A] =
       cons(init, iterate(next(init))(next))
 
-    // Utile per task opzionali
     def fromSequence[A](seq: Sequence[A]): Stream[A] = seq match
       case Sequence.Cons(h, t) => cons(h, fromSequence(t))
       case Sequence.Nil() => empty()
 
-    /*
-     * 6. Restituisce il prefisso massimo dello stream
-     * i cui elementi soddisfano pred.
-     */
+    def fromList[A](lst: List[A]): Stream[A] = lst match
+      case h :: t => cons(h, fromList(t))
+      case Nil => empty()
+
     def takeWhile[A](stream: Stream[A])(pred: A => Boolean): Stream[A] = stream match
-      case Cons(head, tail) if pred(head()) =>
-        cons(head(), takeWhile(tail())(pred))
+      case Cons(head, tail) =>
+        val h = head()
+        if pred(h) then cons(h, takeWhile(tail())(pred))
+        else Empty()
       case _ =>
         Empty()
 
-    /*
-     * 7. Crea uno stream finito di n elementi tutti uguali a k.
-     */
     def fill[A](n: Int)(k: => A): Stream[A] =
       if n <= 0 then empty()
       else cons(k, fill(n - 1)(k))
 
-    /*
-     * 8. Stream infinito di Fibonacci.
-     * 0, 1, 1, 2, 3, 5, ...
-     */
     val fibonacci: Stream[Int] =
       def fib(a: Int, b: Int): Stream[Int] =
         cons(a, fib(b, a + b))
       fib(0, 1)
 
-    /*
-     * 9. Alterna gli elementi di due stream.
-     * Quando uno finisce, continua con l'altro.
-     */
     def interleave[A](s1: Stream[A], s2: Stream[A]): Stream[A] = s1 match
       case Cons(head, tail) =>
         cons(head(), interleave(s2, tail()))
       case _ =>
         s2
 
-    /*
-     * 10. Crea uno stream infinito ciclato su una Sequence finita.
-     * Se la lista è vuota, restituisce stream vuoto.
-     */
     def cycle[A](lst: Sequence[A]): Stream[A] =
       def loop(current: Sequence[A]): Stream[A] = current match
         case Sequence.Cons(h, t) => cons(h, loop(t))
@@ -112,8 +98,8 @@ object Streams extends App:
   println(Stream.toList(Stream.fill(3)("a")))
   println(Stream.toList(Stream.take(Stream.fibonacci)(5)))
 
-  val s1 = Stream.fromSequence(Cons(1, Cons(3, Cons(5, Nil()))))
-  val s2 = Stream.fromSequence(Cons(2, Cons(4, Cons(6, Cons(8, Cons(10, Nil()))))))
+  val s1 = Stream.fromList(List(1, 3, 5))
+  val s2 = Stream.fromList(List(2, 4, 6, 8, 10))
   println(Stream.toList(Stream.interleave(s1, s2)))
 
   val repeat = Stream.cycle(Cons('a', Cons('b', Cons('c', Nil()))))
