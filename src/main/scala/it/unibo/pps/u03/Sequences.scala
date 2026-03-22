@@ -161,6 +161,12 @@ object Sequences: // Essentially, generic linkedlists
         else
           (matching, Cons(h, nonMatching))
 
+
+    def size[A](s: Sequence[A]): Int = s match {
+      case Cons(_, t) => 1 + size(t)
+      case Nil() => 0
+    }
+
 @main def trySequences =
   import Sequences.*
   val l = Sequence.Cons(10, Sequence.Cons(20, Sequence.Cons(30, Sequence.Nil())))
