@@ -2,6 +2,8 @@ package u03
 
 import u03.Optionals.Optional
 import u03.Optionals.Optional.*
+import u03.Person
+import u03.Person.*
 
 object Sequences: // Essentially, generic linkedlists
 
@@ -161,11 +163,22 @@ object Sequences: // Essentially, generic linkedlists
         else
           (matching, Cons(h, nonMatching))
 
-
-    def size[A](s: Sequence[A]): Int = s match {
+    def size[A](s: Sequence[A]): Int = s match
       case Cons(_, t) => 1 + size(t)
       case Nil() => 0
-    }
+
+    def teacherCourses(s: Sequence[Person]): Sequence[String] =
+      flatMap(s):
+        case Teacher(_, course) => Cons(course, Nil())
+        case _ => Nil()
+
+    def foldLeft[A, B](s: Sequence[A])(v: B)(f: (B, A) => B): B = s match
+      case Cons(h, t) => foldLeft(t)(f(v, h))(f)
+      case Nil() => v
+
+    def differentCourses(s: Sequence[Person]): Int =
+      foldLeft(distinct(teacherCourses(s)))(0):
+        (acc, _) => acc + 1
 
 @main def trySequences =
   import Sequences.*
